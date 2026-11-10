@@ -1,2 +1,3 @@
-# Cubelings
-Open-source DIY take on Radica’s Cube World: tiny stick-figure characters living in snap-together desk cubes.
+Cubelings are little desk cubes, each home to its own stick-figure resident. Tilt or shake a cube and its Cubeling reacts. Snap cubes together on any edge and the characters can walk from one cube into the next, visit each other, and wander across your whole desk.
+
+Inspired by Radica’s Cube World toys from the mid-2000s, rebuilt from scratch with cheap, store-bought parts: an ESP32-C3 SuperMini, a 0.96" OLED, an MPU-6050 accelerometer and magnetic pogo connectors on every edge.

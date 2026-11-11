@@ -10,7 +10,7 @@ Hoe je één Cubeling-kubus bedraadt en in elkaar zet. Voor de onderdelen, zie [
 flowchart TB
     subgraph CUBE[Eén kubus]
         MCU[ESP32-C3 SuperMini<br/>op expansion board]
-        OLED[0,96&quot; OLED<br/>I2C 0x3C]
+        OLED[0,96 inch OLED<br/>I2C 0x3C]
         IMU[MPU-6050<br/>I2C 0x68]
         BAT[LiPo 500 mAh]
         BUS((5 V-bus))
@@ -165,14 +165,14 @@ Ongeveer 45 × 45 mm. Twee connectoren per rand, op een kwart en op driekwart va
 
 ```mermaid
 flowchart TB
-    A[1. Breadboardtest<br/>ESP32 + OLED + MPU-6050] --> B[2. Test met twee kubussen<br/>één rand, losse draden]
-    B --> C[3. Behuizing printen<br/>pasvorm connectoren checken]
-    C --> D[4. Connectoren in<br/>de wandsleuven lijmen]
-    D --> E[5. 5 V-bus + GND-ring<br/>naar alle connectoren solderen]
-    E --> F[6. Diodes en<br/>TX-weerstanden solderen]
-    F --> G[7. Printplaten, OLED<br/>en MPU-6050 monteren]
-    G --> H[8. LiPo aansluiten,<br/>deksel sluiten]
-    H --> I[9. Testen: tegen<br/>een andere kubus klikken]
+    A[Stap 1: Breadboardtest<br/>ESP32 + OLED + MPU-6050] --> B[Stap 2: Test met twee kubussen<br/>één rand, losse draden]
+    B --> C[Stap 3: Behuizing printen<br/>pasvorm connectoren checken]
+    C --> D[Stap 4: Connectoren in<br/>de wandsleuven lijmen]
+    D --> E[Stap 5: 5 V-bus + GND-ring<br/>naar alle connectoren solderen]
+    E --> F[Stap 6: Diodes en<br/>TX-weerstanden solderen]
+    F --> G[Stap 7: Printplaten, OLED<br/>en MPU-6050 monteren]
+    G --> H[Stap 8: LiPo aansluiten,<br/>deksel sluiten]
+    H --> I[Stap 9: Testen: tegen<br/>een andere kubus klikken]
 ```
 
 ### Tips

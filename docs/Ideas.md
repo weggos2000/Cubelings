@@ -29,7 +29,7 @@ Cubelings vult dat gat: een speeltje in Cube World-stijl, gebouwd met goedkope o
 flowchart LR
     BAT[LiPo 500 mAh] --> EXP[Expansion board<br/>lader + pinnen]
     EXP --> MCU[ESP32-C3 SuperMini]
-    MCU -- I2C --> OLED[0,96&quot; OLED<br/>scherm vooraan]
+    MCU -- I2C --> OLED[0,96 inch OLED<br/>scherm vooraan]
     MCU -- I2C --> IMU[MPU-6050<br/>kantelen + schudden]
     MCU <--> E1[Bovenrand]
     MCU <--> E2[Rechterrand]

@@ -1,162 +1,187 @@
-# Cubelings: the idea
+# Cubelings: het idee
 
-Cubelings are little desk cubes, each home to a stick-figure resident. Tilt or shake a cube and its Cubeling reacts. Snap cubes together on any edge and the characters can walk from one cube into the next, visit each other, and wander across the whole desk.
+Cubelings zijn kleine bureaukubusjes, elk met een eigen streepjesmannetje als bewoner. Kantel of schud een kubus en zijn Cubeling reageert. Klik kubussen aan elkaar op eender welke rand en de figuurtjes kunnen van de ene kubus naar de andere wandelen, bij elkaar op bezoek gaan en over je hele bureau zwerven.
 
-## Inspiration
+## Inspiratie
 
-Radica's **Cube World** (mid-2000s, later Mattel): small cubes with an LCD screen and a stick figure inside. Each character had its own activity, you could shake or tilt the cube to mess with it, and cubes connected with magnets so characters could jump between them.
+**Cube World** van Radica (midden jaren 2000, later Mattel): kleine kubusjes met een lcd-scherm en een streepjesmannetje erin. Elk figuurtje had zijn eigen bezigheid, je kon de kubus schudden of kantelen om het te plagen, en kubussen klikten met magneten aan elkaar zodat de figuurtjes van de ene naar de andere konden springen.
 
-There's no open-source recreation of it. The closest projects are:
+Er bestaat geen opensource-namaak van. De projecten die het dichtst in de buurt komen:
 
-- [npjg/radica-cube-world-hack](https://github.com/npjg/radica-cube-world-hack): reverse-engineering the original cubes' communication
-- [Adafruit Tiny LED WiFi Cube](https://learn.adafruit.com/tiny-led-wifi-cube/overview): ESP32 + accelerometer in a cube
-- Arduino Tamagotchi clones (e.g. Cassagotchi): a creature living on a tiny OLED
+- [npjg/radica-cube-world-hack](https://github.com/npjg/radica-cube-world-hack): reverse-engineering van hoe de originele kubussen communiceren
+- [Adafruit Tiny LED WiFi Cube](https://learn.adafruit.com/tiny-led-wifi-cube/overview): ESP32 + versnellingsmeter in een kubus
+- Tamagotchi-klonen op Arduino (bv. Cassagotchi): een wezentje dat op een piepklein OLED-scherm leeft
 
-Cubelings fills that gap: a Cube World-style toy built from cheap, store-bought parts.
+Cubelings vult dat gat: een speeltje in Cube World-stijl, gebouwd met goedkope onderdelen uit de winkel.
 
-## Design goals
+## Ontwerpdoelen
 
-- **One screen, on the front**, like the originals
-- **Cheap enough to make many**: around €35–40 per cube
-- **Store-bought parts only**: no custom PCBs or DIY connectors
-- **Any edge connects to any edge**, with screens facing forward
-- **Programmed in Python** (MicroPython)
+- **Eén scherm, vooraan**, zoals de originelen
+- **Goedkoop genoeg om er veel te maken**: ongeveer €37–43 per kubus
+- **Enkel onderdelen uit de winkel**: geen eigen printplaten of zelfgemaakte connectoren
+- **Elke rand past op elke rand**, met de schermen naar voren
+- **Geprogrammeerd in Python** (MicroPython)
+- **Een hele rij opladen met één USB-kabel**
 
-## What's inside a cube
+## Wat zit er in een kubus
 
 ```mermaid
 flowchart LR
-    BAT[LiPo 500 mAh] --> EXP[Expansion board<br/>charger + pin breakout]
+    BAT[LiPo 500 mAh] --> EXP[Expansion board<br/>lader + pinnen]
     EXP --> MCU[ESP32-C3 SuperMini]
-    MCU -- I2C --> OLED[0.96&quot; OLED<br/>front screen]
-    MCU -- I2C --> IMU[MPU-6050<br/>tilt + shake]
-    MCU <--> E1[Top edge]
-    MCU <--> E2[Right edge]
-    MCU <--> E3[Bottom edge]
-    MCU <--> E4[Left edge]
+    MCU -- I2C --> OLED[0,96&quot; OLED<br/>scherm vooraan]
+    MCU -- I2C --> IMU[MPU-6050<br/>kantelen + schudden]
+    MCU <--> E1[Bovenrand]
+    MCU <--> E2[Rechterrand]
+    MCU <--> E3[Onderrand]
+    MCU <--> E4[Linkerrand]
 ```
 
-Full parts list with links and prices: [partlist.md](partlist.md)
+Volledige onderdelenlijst met links en prijzen: [partlist.md](partlist.md)
 
-## Connecting cubes
+## Kubussen verbinden
 
-### The problem
+### Het probleem
 
-Magnetic pogo connectors come as a pair: a **plug** (spring pins) and a **socket** (flat pads). Plug only fits socket. So if every cube should connect to every other cube, on any edge, which half goes where?
+Magnetische pogo-connectoren komen per paar: een **stekker** (verende pinnen) en een **contrastekker** (vlakke contacten). Een stekker past alleen op een contrastekker. Als elke kubus op elke andere kubus moet passen, op eender welke rand, welke helft zet je dan waar?
 
-### The solution: the clockwise rule
+### De oplossing: de wijzerzin-regel
 
-Every edge gets **one plug and one socket, side by side**. Looking at the cube from the front, go around the edges clockwise: on each edge, the **plug sits on the half you reach first**, the socket on the half you reach second.
+Elke rand krijgt **één stekker en één contrastekker, naast elkaar**. Kijk vanaf de voorkant naar de kubus en ga met de klok mee rond de randen: op elke rand zit de **stekker op de helft die je eerst tegenkomt**, de contrastekker op de tweede helft.
 
 ```
-          [P]         [S]
+          [S]         [C]
        +---------------------+
        |                     |
-   [S] |                     | [P]
+   [C] |                     | [S]
        |    +-----------+    |
        |    |   OLED    |    |
        |    +-----------+    |
-   [P] |                     | [S]
+   [S] |                     | [C]
        |                     |
        +---------------------+
-          [S]         [P]
+          [C]         [S]
 
-   P = plug (pins)    S = socket (pads)
+   S = stekker (pinnen)    C = contrastekker (contacten)
 ```
 
-When two cubes touch, their clockwise directions run opposite along the shared edge, like two gears meshing. So **a plug always lands on a socket**, whichever edges meet and however a cube is turned (0°, 90°, 180°, 270°). The only rule: both screens face forward.
+Als twee kubussen elkaar raken, lopen hun wijzerzin-richtingen tegengesteld langs de gedeelde rand, zoals twee tandwielen die in elkaar grijpen. Zo komt **een stekker altijd op een contrastekker terecht**, welke randen elkaar ook raken en hoe een kubus ook gedraaid is (0°, 90°, 180°, 270°). De enige regel: beide schermen kijken naar voren.
 
-Each connector pair gets split: the plug half goes on one edge, the socket half on the next edge clockwise. That's **4 pairs per cube** for 4 edges.
+Elk connectorpaar wordt gesplitst: de stekkerhelft gaat op één rand, de contrastekkerhelft op de volgende rand in wijzerzin. Dat zijn **4 paren per kubus** voor 4 randen.
 
-The magnets in the connectors repel when reversed, so cubes can't be joined the wrong way.
+De magneten in de connectoren stoten elkaar af als je ze verkeerd om houdt, dus je kunt kubussen niet fout aan elkaar zetten.
 
-### Wiring per edge
+### Bedrading per rand
 
-Each connector only needs 2 pins:
+Elke connector heeft 3 pinnen:
 
-| Half | Pin 1 | Pin 2 |
-|------|-------|-------|
-| Plug | GND | TX (send) |
-| Socket | GND | RX (receive) |
+| Helft | Pin 1 | Pin 2 | Pin 3 |
+|-------|-------|-------|-------|
+| Stekker | GND | 5 V (gedeeld) | TX (zenden) |
+| Contrastekker | GND | 5 V (gedeeld) | RX (ontvangen) |
 
-One cube's TX always lands on the other cube's RX, in both directions at once, so both cubes can talk simultaneously without collisions. The cube also knows exactly **which edge** a message came in on, because each edge has its own RX pin.
+De TX van de ene kubus komt altijd op de RX van de andere terecht, in beide richtingen tegelijk. Zo kunnen beide kubussen tegelijk praten zonder botsingen. De kubus weet ook precies **langs welke rand** een bericht binnenkwam, want elke rand heeft zijn eigen RX-pin.
 
-GPIO budget: 4 edges × (TX + RX) = 8 pins, plus 2 for I2C = 10 of the SuperMini's 13 GPIOs.
+GPIO-budget: 4 randen × (TX + RX) = 8 pinnen, plus 2 voor I2C = 10 van de 13 GPIO's van de SuperMini. De 5 V- en GND-pinnen gebruiken geen GPIO's.
 
-### Turned cubes
+### De hele rij opladen
 
-A cube that's connected sideways has its screen sideways too. The MPU-6050 knows which way is down, so the software rotates the picture and the Cubeling always stays upright.
+De 5 V-pin op elke rand is verbonden met één gedeelde **5 V-bus** binnen in de kubus. Steek één kubus in USB-C en de 5 V loopt via de connectoren naar elke kubus in de rij, zodat ze allemaal tegelijk opladen.
 
-## How a Cubeling moves between cubes
+```mermaid
+flowchart LR
+    USB[USB-C op één kubus] --> DA[Diode A]
+    DA --> BUS((5 V-bus))
+    BUS <--> EDGES[4 randconnectoren<br/>naar de buren]
+    BUS --> DB[Diode B]
+    DB --> CHG[Expansion board<br/>5 V-laadingang]
+    CHG --> BAT[LiPo]
+```
+
+Twee diodes per kubus houden de stroom in de juiste richting:
+
+- **Diode A** laat de eigen USB-C van de kubus de bus voeden, maar voorkomt dat de bus terugduwt in de USB-poort.
+- **Diode B** laat de bus de lader voeden, maar voorkomt dat een kubus op batterij zijn buren probeert te voeden.
+
+Regels:
+
+- De bus gaat alleen naar de **laadingang**, nooit rechtstreeks naar een batterij. Batterijen die verschillend opgeladen zijn en rechtstreeks verbonden worden, duwen grote stromen in elkaar.
+- Het verbruik is laag: elk expansion board laadt met max. 100 mA, dus 5 kubussen is maar 0,5 A, ruim binnen wat USB en de connectoren (2 A) aankunnen.
+- Controleer op de eerste kubus hoe de 5 V- en USB-pinnen van het expansion board verbonden zijn, voor je de bus bedraadt.
+
+### Gedraaide kubussen
+
+Een kubus die zijwaarts verbonden is, heeft ook een zijwaarts scherm. De MPU-6050 weet waar onder is, dus de software draait het beeld mee en de Cubeling blijft altijd rechtop.
+
+## Hoe een Cubeling van kubus wisselt
 
 ```mermaid
 sequenceDiagram
-    participant A as Cube A
-    participant B as Cube B
-    Note over A,B: Cubes snap together
-    A->>B: HELLO from cube A, my right edge
-    B->>A: HELLO from cube B, my top edge
-    Note over A,B: Both store the neighbor in their edge table
-    A->>B: Slim is leaving through my right edge
-    B->>A: OK, room available
-    Note over A: Slim walks off the screen
-    Note over B: Slim walks in from the touching edge
-    Note over A,B: Cubes pulled apart
-    Note over B: Link lost, Slim "dissolves" back home to A
+    participant A as Kubus A
+    participant B as Kubus B
+    Note over A,B: Kubussen klikken aan elkaar
+    A->>B: HALLO van kubus A, mijn rechterrand
+    B->>A: HALLO van kubus B, mijn bovenrand
+    Note over A,B: Beide slaan de buur op in hun randtabel
+    A->>B: Slim vertrekt via mijn rechterrand
+    B->>A: OK, er is plaats
+    Note over A: Slim wandelt het scherm af
+    Note over B: Slim wandelt binnen langs de rakende rand
+    Note over A,B: Kubussen uit elkaar gehaald
+    Note over B: Verbinding weg, Slim "lost op" en keert terug naar A
 ```
 
-Each cube keeps a small table of its neighbors, e.g. `{right: "A", top: "C"}`. With three or more cubes, characters can hop along the chain. Like the originals, a cube could have a maximum number of visitors (Cube World allowed four).
+Elke kubus houdt een kleine tabel bij van zijn buren, bv. `{rechts: "A", boven: "C"}`. Met drie of meer kubussen kunnen figuurtjes langs de hele rij springen. Net als bij de originelen kan een kubus een maximum aantal bezoekers hebben (Cube World liet er vier toe).
 
-## Character behavior
+## Gedrag van het figuurtje
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Idle
-    Idle --> Walking: random timer
-    Walking --> Activity: reaches spot
-    Activity --> Idle: done
-    Idle --> Sleeping: no input for a while
-    Sleeping --> Idle: tilt or tap
-    Idle --> Dizzy: shake
-    Walking --> Dizzy: shake
-    Activity --> Dizzy: shake
-    Dizzy --> Idle: settles
-    Walking --> Leaving: reaches a connected edge
-    Leaving --> [*]: handed to neighbor cube
+    [*] --> Rust
+    Rust --> Wandelen: willekeurige timer
+    Wandelen --> Bezigheid: bereikt plek
+    Bezigheid --> Rust: klaar
+    Rust --> Slapen: een tijd geen invoer
+    Slapen --> Rust: kantelen of tikken
+    Rust --> Duizelig: schudden
+    Wandelen --> Duizelig: schudden
+    Bezigheid --> Duizelig: schudden
+    Duizelig --> Rust: komt tot rust
+    Wandelen --> Vertrekken: bereikt verbonden rand
+    Vertrekken --> [*]: doorgegeven aan buurkubus
 ```
 
-- **Idle / walking / activity / sleeping** make up the personality loop, with random timers in between
-- **Tilt** makes the Cubeling walk or slide that way
-- **Shake** interrupts everything with a dizzy or falling-over animation
-- Every cube gets its **own character with its own activity**, like the original series
+- **Rust / wandelen / bezigheid / slapen** vormen de persoonlijkheidslus, met willekeurige timers ertussen
+- **Kantelen** laat de Cubeling die kant op wandelen of glijden
+- **Schudden** onderbreekt alles met een duizelige of omvallende animatie
+- Elke kubus krijgt een **eigen figuurtje met een eigen bezigheid**, zoals in de originele reeks
 
-## Build plan
+## Bouwplan
 
-1. **One cube on the desk:** ESP32 + OLED. Draw a stick figure, make it walk back and forth.
-2. **Add the accelerometer:** tilt to walk, shake to get dizzy, auto-rotate the screen.
-3. **Personality loop:** state machine with idle, walk, activity, sleep.
-4. **Second cube + connectors:** HELLO handshake over one edge, then all four edges.
-5. **Character transfer:** walk off one screen, walk onto the other.
-6. **Shell:** 3D-printed cube with exact connector slots and a window for the screen.
-7. **Battery:** run untethered, add a battery indicator.
-8. **More cubes, more characters.**
+1. **Eén kubus op het bureau:** ESP32 + OLED. Teken een streepjesmannetje en laat het heen en weer wandelen.
+2. **Versnellingsmeter erbij:** kantelen om te wandelen, schudden om duizelig te worden, scherm automatisch draaien.
+3. **Persoonlijkheidslus:** toestandsmachine met rust, wandelen, bezigheid, slapen.
+4. **Tweede kubus + connectoren:** HALLO-handdruk via één rand, daarna alle vier de randen.
+5. **Figuurtje doorgeven:** van het ene scherm af wandelen, het andere op wandelen.
+6. **Behuizing:** 3D-geprinte kubus met exacte connectorsleuven en een venster voor het scherm.
+7. **Batterij + gedeeld laden:** zonder kabel werken, batterij-indicator toevoegen, 5 V-bus bedraden zodat een rij oplaadt via één kabel.
+8. **Meer kubussen, meer figuurtjes.**
 
-## Options considered (and why not)
+## Bekeken opties (en waarom niet)
 
-| Option | Why not (for now) |
-|--------|-------------------|
-| Adafruit QT Py ESP32-S3 + Adafruit parts | Works great, but ~€55–70 per cube |
-| Six 8×8 LED matrices (Adafruit cube) | Original only had a front screen; one OLED looks better and is cheaper |
-| Wireless (ESP-NOW) + Hall sensors | Contactless and cheap, but cubes must guess who's next to whom by timing |
-| Infrared LED + receiver per face | Genderless, but more parts per face and can't share power |
-| DIY genderless connectors (pogo pins + pads + magnets) | Cheapest per face, but needs custom building |
-| Concentric contacts / magnets as contacts | Genderless and rotation-proof, but DIY |
-| AliExpress parts | Cheapest, but slow, and the goal is EU shops only |
+| Optie | Waarom niet (voorlopig) |
+|-------|-------------------------|
+| Adafruit QT Py ESP32-S3 + Adafruit-onderdelen | Werkt prima, maar ~€55–70 per kubus |
+| Zes 8×8 led-matrices (Adafruit-kubus) | Het origineel had enkel een scherm vooraan; één OLED ziet er beter uit en is goedkoper |
+| Draadloos (ESP-NOW) + Hall-sensoren | Contactloos en goedkoop, maar kubussen moeten via timing raden wie naast wie ligt |
+| Infrarood-led + ontvanger per zijde | Genderloos, maar meer onderdelen per zijde en geen stroom delen mogelijk |
+| Zelfgemaakte genderloze connectoren (pogo-pinnen + contacten + magneten) | Goedkoopst per zijde, maar vraagt eigen knutselwerk |
+| Concentrische contacten / magneten als contacten | Genderloos en draaibestendig, maar zelfbouw |
+| Onderdelen van AliExpress | Goedkoopst, maar traag, en het doel is enkel Europese winkels |
 
-## Open questions
+## Open vragen
 
-- Exact cube size: ~45 mm? Depends on how the connectors, battery and boards fit.
-- Do the BerryBase 2-pin connectors fit two per edge?
-- Should connectors also share power (3rd pin) so a chain can run off one USB cable?
-- Which characters and activities? (The originals had things like a guy with a stick, a dog, a rope…)
-- Software serial on 4 edges at once: bit-banged UART or polling with a simple protocol?
+- Exacte grootte van de kubus: ~45 mm? Hangt af van hoe de connectoren, batterij en printplaten passen.
+- Passen de 3-pins connectoren van BerryBase met twee per rand?
+- Welke figuurtjes en bezigheden? (De originelen hadden onder meer een mannetje met een stok, een hond, een touw…)
+- Software-serial op 4 randen tegelijk: bit-banged UART of polling met een eenvoudig protocol?
